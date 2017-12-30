@@ -20,9 +20,7 @@
 				'smalltalk.greetings.hello': () =>{
 					console.log('greetings');
 					let message = `Hello! Hi! I'm an automatic symptom checker.
-					 				I'll guide you through a simple interview.
-					I'll do my best to explain common health issues, such as headache, fatigue or stomach ache.
-	 What concerns you most about your health? Please describe your symptoms.`
+					 				I'll guide you through a simple interview. Do you want to start now?`;
 					let responseToUser = {
 		         	 speech: message, // spoken response
 		         	 text:message // displayed response
@@ -30,7 +28,16 @@
 		        	sendResponse(responseToUser);
 
 				},
-			 	'get_syndrome_one': () =>{ 
+				'begin.check': () =>{
+					let message = `I'll do my best to explain common health issues, such as headache, fatigue or stomach ache.
+					 What concerns you most about your health? Please describe your symptoms.`;
+				 let responseToUser = {
+		         	 speech: message, // spoken response
+		         	 text:message // displayed response
+		        	};
+		        	sendResponse(responseToUser);
+				},
+			 	'get.syndrome.one': () =>{ 
 			 		getSyndrome(syndrome).then((output) =>{
 			 			let message = `Do you mean: ${output}? --from cloud function`;
 			 			let responseToUser = {
@@ -42,7 +49,10 @@
 			 	}
 			 };
 
-			 actionHandler[action]();
+			 if (!actionHandler[action] || action == 'input.welcome') {
+    			action = 'smalltalk.greetings.hello';
+  			}			 
+  			actionHandler[action]();
 
 			  // Function to send correctly formatted responses to Dialogflow which are then sent to the user
 			  function sendResponse (responseToUser) {
@@ -73,7 +83,7 @@
   return new Promise((resolve, reject) => {
     // Create the path for the HTTP request to get the weather
     value = encodeURI(value);
-    var option = httpRequestBuilder(1, `search?phrase=${value}&sex=male&max_results=8&type=symptom`);
+    var option = httpRequestBuilder(1, `search?phrase=${value}&sex=male&max_results=8`);
     http.get(option, (res) => {
       console.log("response code " + res.statusCode);
       let body = '';

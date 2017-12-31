@@ -37,15 +37,41 @@ function processRequest(request, response) {
 			};
 			sendResponse(responseToUser);
 		},
-		'get.syndrome.one': () => {
+		'get.syndrome': () => {
 			getSyndrome(syndrome).then((output) => {
-				let message = `Do you mean: ${output}? --from cloud function`;
+				let message = `Do you mean: ${output}?`;
 				let responseToUser = {
 					speech: message, // spoken response
 					text: message // displayed response
 				};
 				sendResponse(responseToUser);
 			})
+		},
+		'symptom.confirmation.yes': () => {
+			let message = `Alright! What else you want to report?`;
+			let responseToUser = {
+				speech: message, // spoken response
+				text: message // displayed response
+			};
+			sendResponse(responseToUser);
+		},
+		'symptom.confirmation.no': () => {
+			let message = `I will skip that. Please describe it again.`;
+			let responseToUser = {
+				speech: message, // spoken response
+				text: message, // displayed response
+				messages:  [
+					        {
+					          "type": 0,
+					          "speech": message
+					        },
+					        {
+					          "type": 0,
+					          "speech": "Try using simple phrases such as lower back pain, fever."
+					        }
+					      ]
+			};
+			sendResponse(responseToUser);
 		}
 	};
 
@@ -69,6 +95,7 @@ function processRequest(request, response) {
 			// If speech or displayText is defined, use it to respond (if one isn't defined use the other's value)
 			responseJson.speech = responseToUser.speech || responseToUser.displayText;
 			responseJson.displayText = responseToUser.displayText || responseToUser.speech;
+			responseJson.messages = responseToUser.messages;
 			// Optional: add rich messages for integrations (https://dialogflow.com/docs/rich-messages)
 			responseJson.data = responseToUser.data;
 			// Optional: add contexts (https://dialogflow.com/docs/contexts)

@@ -38,8 +38,21 @@ function processRequest(request, response) {
 			sendResponse(responseToUser);
 		},
 		'get.syndrome': () => {
-			getSyndrome(syndrome).then((output) => {
-				let message = `Do you mean: ${output}?`;
+			getSyndrome(syndrome).then((output) => {	
+				let outputContexts = '';
+				for(var i = 0; i < output.length; i ++){
+					console.log("choice id = " + output[0].choice_id);
+					if(output[i].choice_id == 'present'){
+						if(i > 0)
+							outputContexts += ', ';
+						outputContexts += output[i].syndrome;
+					}
+				}
+				let message = '';
+				if(outputContexts == '')
+					message = `Please describe your symptoms.`;
+				else
+				    message = `Do you mean: ${outputContexts}?`;				
 				let responseToUser = {
 					speech: message, // spoken response
 					text: message // displayed response
@@ -72,6 +85,22 @@ function processRequest(request, response) {
 					      ]
 			};
 			sendResponse(responseToUser);
+		},
+		'diagnosis': () =>{
+			let message = `Okay, let me ask you a couple of questions.`;
+			let message_2 = `abc`;
+			let responseToUser = {
+				messages:[
+					        {
+					          "type": 0,
+					          "speech": message
+					        },
+					        {
+					          "type": 0,
+					          "speech": message_2
+  					        }
+					      ]
+			}
 		}
 	};
 
@@ -93,8 +122,8 @@ function processRequest(request, response) {
 			// If the response to the user includes rich responses or contexts send them to Dialogflow
 			let responseJson = {};
 			// If speech or displayText is defined, use it to respond (if one isn't defined use the other's value)
-			responseJson.speech = responseToUser.speech || responseToUser.displayText;
-			responseJson.displayText = responseToUser.displayText || responseToUser.speech;
+			responseJson.speech = responseToUser.speech || responseToUser.displayText || responseToUser.messages;
+			responseJson.displayText = responseToUser.displayText || responseToUser.speech  || responseToUser.messages;;
 			responseJson.messages = responseToUser.messages;
 			// Optional: add rich messages for integrations (https://dialogflow.com/docs/rich-messages)
 			responseJson.data = responseToUser.data;
@@ -122,11 +151,14 @@ function getSyndrome(value) {
 			res.on('end', () => {
 				// After all the data has been received parse the JSON for desired data
 				let response = JSON.parse(body);
-				let output = '';
+				var output = new Array();
 				console.log(response);
 				let syndrome = response.mentions;
 				for (var i = 0; i < syndrome.length; i++) {
-					output += syndrome[i]['name'] + ': ' + syndrome[i]['choice_id'] + '\n';
+					output.push(
+						{ syndrome : syndrome[i]['name'],
+						  choice_id :  syndrome[i]['choice_id']
+						});
 				}
 
 				// Resolve the promise with the output text
@@ -168,5 +200,18 @@ function httpRequestBuilder(method, params) {
 			'Dev-Mode': true
 		}
 	};
+
+
+	function recordSymtom(){
+		var data = {
+
+		};
+	}
+
+	function constructDiagnosis(){
+		var data = {
+
+		};
+	}
 
 }

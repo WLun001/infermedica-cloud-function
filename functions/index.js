@@ -1,10 +1,14 @@
 'use strict';
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 
 const http = require('https');
 const host = 'api.infermedica.com';
 const appId = '23c309ab';
 const appKey = '977d3f7eadfc3a467e624d7b8bef64b3';
+
+admin.initializeApp(functions.config().firebase);
+var db = admin.firestore();
 
 exports.medicWebhook = functions.https.onRequest((req, res) => {
 	processRequest(req, res)
@@ -39,6 +43,7 @@ function processRequest(request, response) {
 		},
 		'get.syndrome': () => {
 			getSyndrome(syndrome).then((output) => {	
+				recordSyndrome(output);
 				let outputContexts = '';
 				for(var i = 0; i < output.length; i ++){
 					console.log("choice id = " + output[0].choice_id);
@@ -200,18 +205,18 @@ function httpRequestBuilder(method, params) {
 			'Dev-Mode': true
 		}
 	};
+}
 
-
-	function recordSymtom(){
-		var data = {
-
-		};
+function recordSyndrome(output){
+	var data = {
+		initial : output
+		}
+		var setDoc = db.collection('users').doc('test').set(data);
 	}
 
-	function constructDiagnosis(){
-		var data = {
 
-		};
-	}
+function constructDiagnosis(){
+	var data = {
 
+	};
 }

@@ -106,6 +106,7 @@ function processRequest(request, response) {
   					        }
 					      ]
 			}
+			sendResponse(responseToUser);
 		}
 	};
 
@@ -127,8 +128,8 @@ function processRequest(request, response) {
 			// If the response to the user includes rich responses or contexts send them to Dialogflow
 			let responseJson = {};
 			// If speech or displayText is defined, use it to respond (if one isn't defined use the other's value)
-			responseJson.speech = responseToUser.speech || responseToUser.displayText || responseToUser.messages;
-			responseJson.displayText = responseToUser.displayText || responseToUser.speech  || responseToUser.messages;;
+			responseJson.speech = responseToUser.speech || responseToUser.displayText;
+			responseJson.displayText = responseToUser.displayText || responseToUser.speech;
 			responseJson.messages = responseToUser.messages;
 			// Optional: add rich messages for integrations (https://dialogflow.com/docs/rich-messages)
 			responseJson.data = responseToUser.data;

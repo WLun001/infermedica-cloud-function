@@ -10,6 +10,7 @@ const appKey = '977d3f7eadfc3a467e624d7b8bef64b3';
 admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
 const dbRefInitialSyndrome = db.collection('user1').doc('initial_syndrome');
+const dbRefDiagnosisResult = db.collection('user1').doc('diagnosis_result');
 
 exports.medicWebhook = functions.https.onRequest((req, res) => {
 	processRequest(req, res)
@@ -194,7 +195,8 @@ function getResult(value) {
 		// Create the path for the HTTP request to get the weather
 		var output = new Array();
 		let evidence = value.data().initial;
-	            console.log("doc1: " + evidence);
+	    
+	     console.log("doc1: " + evidence);
 	            for(var i = 0; i < evidence.length; i++) {
 		    	output.push(
 		    	{
@@ -203,6 +205,15 @@ function getResult(value) {
 		    		initial : true
 		    	});
 		    }
+
+		    var data = {
+					sex : "male", 
+			    	age : 35, 
+			    	evidence : output, 
+			    	extras : {"disable_groups" : true}
+				}
+
+			recordCollectedResult(data);
 
 		console.log(JSON.stringify(value));
 
@@ -219,8 +230,10 @@ function getResult(value) {
 				let response = JSON.parse(body);
 				console.log("get result body: " + body);
 				console.log("get result response: " + response);
+				recordCurrentResult(response);
 				let question = response.question.text;
 				console.log("question: " + question);
+
 				resolve(question);
 			});
 
@@ -230,12 +243,7 @@ function getResult(value) {
 
 		});
 
-		req.write(JSON.stringify({
-			sex : "male", 
-	    	age : 35, 
-	    	evidence : output, 
-	    	extras : {"disable_groups" : true}
-		}));
+		req.write(JSON.stringify(data));
 
 		req.end();
 	});
@@ -274,4 +282,18 @@ function recordSyndrome(output){
 		}
 		var setDoc = dbRefInitialSyndrome.set(data);
 	}
+
+function recordCurrentResult(output){
+	var data = {
+		current_result : output
+	}
+	var setDoc = dbRefDiagnosisResult.update(data);
+}
+
+function recordCollectedResult(output){
+	var data = {
+		collected_result : output
+	}
+	var setDoc = dbRefDiagnosisResult.update(data);
+}
 

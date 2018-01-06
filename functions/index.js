@@ -96,15 +96,6 @@ function processRequest(request, response) {
 			dbRefInitialSyndrome.get().then((doc) => { 
 			
 			getResult(doc).then((output) => {	
-				// let outputContexts = '';
-				// for(var i = 0; i < output.length; i ++){
-				// 	console.log("choice id = " + output[0].choice_id);
-				// 	if(output[i].choice_id == 'present'){
-				// 		if(i > 0)
-				// 			outputContexts += ', ';
-				// 		outputContexts += output[i].name;
-				// 	}
-				// }
 				let message = `Okay, let me ask you a couple of questions.`;
 				let message_2 = output;
 				let responseToUser = {
@@ -229,15 +220,6 @@ function getResult(value) {
 				console.log("get result body: " + body);
 				console.log("get result response: " + response);
 				let question = response.question.text;
-				// for (var i = 0; i < syndrome.length; i++) {
-				// 	output.push(
-				// 		{   id : syndrome[i]['id'],
-				// 			name : syndrome[i]['name'],
-				// 		  choice_id :  syndrome[i]['choice_id']
-				// 		});
-				// }
-
-				// Resolve the promise with the output text
 				console.log("question: " + question);
 				resolve(question);
 			});
@@ -293,52 +275,3 @@ function recordSyndrome(output){
 		var setDoc = dbRefInitialSyndrome.set(data);
 	}
 
-
-// function constructDiagnosis(){
-// 	return new Promise((resolve, reject) => {
-// 		var test = db.collection('users').doc('test');
-// 		var output = new Array();
-// 		var getDoc = test.get()
-// 	    .then(doc => {
-// 	        if (!doc.exists) {
-// 	            console.log('No such document!');
-// 	        } else {
-// 	            console.log('Document data:', doc.data());
-// 	            //let doc2 = JSON.stringify(doc.data());
-// 	            let doc1 = doc.data().initial;
-// 	            console.log("doc1: " + doc1);
-// 	            for(var i = 0; i < doc1.length; i++) {
-// 		    	output.push(
-// 		    	{
-// 		    		choice_id : doc1[i]['choice_id'],
-// 		    		id : doc1[i]['id'],
-// 		    		initial : true
-// 		    	});
-
-// 		    	}
-
-// 		    	 console.log("output: " + output);
-
-// 		    	 //console.log("diagnose: " + JSON.stringify(diagnose));
-
-// 		    	 resolve(output);
-// 	        }
-// 	    })
-// 	    .catch(err => {
-// 	        console.log('Error getting document', err);
-// 	    });
-
-// 	    // var output = new Array();
-// 	    // console.log(getDoc);
-//     // let doc = getDoc.initial;
-//     // console.log(doc);
-
-//     // for(var i = 0; i < doc.length; i++) {
-//     // 	output.push(
-//     // 	{
-//     // 		id : doc[i]['id'],
-//     // 		choice_id : doc[i]['choice_id'],
-//     // 		initial : true
-//     // 	});
-//     // }
-// }

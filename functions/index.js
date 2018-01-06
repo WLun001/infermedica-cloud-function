@@ -50,7 +50,7 @@ function processRequest(request, response) {
 					if(output[i].choice_id == 'present'){
 						if(i > 0)
 							outputContexts += ', ';
-						outputContexts += output[i].syndrome;
+						outputContexts += output[i].name;
 					}
 				}
 				let message = '';
@@ -92,22 +92,36 @@ function processRequest(request, response) {
 			sendResponse(responseToUser);
 		},
 		'diagnosis': () =>{
-			var diagnosis = constructDiagnosis();
-			let message = `Okay, let me ask you a couple of questions.`;
-			let message_2 = `abc`;
-			let responseToUser = {
-				messages:[
-					        {
-					          "type": 0,
-					          "speech": message
-					        },
-					        {
-					          "type": 0,
-					          "speech": message_2
-  					        }
-					      ]
-			}
-			sendResponse(responseToUser);
+			var test = db.collection('users').doc('test');
+			test.get().then((doc) => { 
+			
+			getResult(doc).then((output) => {	
+				// let outputContexts = '';
+				// for(var i = 0; i < output.length; i ++){
+				// 	console.log("choice id = " + output[0].choice_id);
+				// 	if(output[i].choice_id == 'present'){
+				// 		if(i > 0)
+				// 			outputContexts += ', ';
+				// 		outputContexts += output[i].name;
+				// 	}
+				// }
+				let message = `Okay, let me ask you a couple of questions.`;
+				let message_2 = output;
+				let responseToUser = {
+					messages:[
+						        {
+						          "type": 0,
+						          "speech": message
+						        },
+						        {
+						          "type": 0,
+						          "speech": message_2
+	  					        }
+						      ]
+				}
+				sendResponse(responseToUser);
+				})
+			})
 		}
 	};
 
@@ -163,7 +177,7 @@ function getSyndrome(value) {
 				let syndrome = response.mentions;
 				for (var i = 0; i < syndrome.length; i++) {
 					output.push(
-						{   id : syndrome[i]['id]'],
+						{   id : syndrome[i]['id'],
 							name : syndrome[i]['name'],
 						  choice_id :  syndrome[i]['choice_id']
 						});
@@ -180,6 +194,65 @@ function getSyndrome(value) {
 		req.write(JSON.stringify({
 			text: value	
 		}));
+		req.end();
+	});
+}
+
+function getResult(value) {
+	return new Promise((resolve, reject) => {
+		// Create the path for the HTTP request to get the weather
+		var output = new Array();
+		let evidence = value.data().initial;
+	            console.log("doc1: " + evidence);
+	            for(var i = 0; i < evidence.length; i++) {
+		    	output.push(
+		    	{
+		    		choice_id : evidence[i]['choice_id'],
+		    		id : evidence[i]['id'],
+		    		initial : true
+		    	});
+		    }
+
+		console.log(JSON.stringify(value));
+
+		var option = httpRequestBuilder(2, 'diagnosis');
+		var req = http.request(option, (res) => {
+			console.log("response code " + res.statusCode);
+			let body = '';
+	        // var to store the response chunks
+			res.on('data', (d) => {
+				body += d;
+			}); // store each response chunk
+			res.on('end', () => {
+				// After all the data has been received parse the JSON for desired data
+				let response = JSON.parse(body);
+				console.log("get result body: " + body);
+				console.log("get result response: " + response);
+				let question = response.question.text;
+				// for (var i = 0; i < syndrome.length; i++) {
+				// 	output.push(
+				// 		{   id : syndrome[i]['id'],
+				// 			name : syndrome[i]['name'],
+				// 		  choice_id :  syndrome[i]['choice_id']
+				// 		});
+				// }
+
+				// Resolve the promise with the output text
+				console.log("question: " + question);
+				resolve(question);
+			});
+			res.on('error', (error) => {
+				reject("error" + error);
+			});
+		});
+		req.write(JSON.stringify({
+			sex : "male", 
+	    	age : 35, 
+	    	evidence : output, 
+	    	extras : {}
+		}
+			));
+
 		req.end();
 	});
 }
@@ -202,6 +275,7 @@ function httpRequestBuilder(method, params) {
 		path: path,
 		method: requestMethod,
 		headers: {
+			'Content-Type': 'application/json',
 			'Accept': 'application/json',
 			'App-Id': appId,
 			'App-Key': appKey,
@@ -218,18 +292,51 @@ function recordSyndrome(output){
 	}
 
 
-function constructDiagnosis(){
-	var test = db.collection('users').doc('test');
-	var getDoc = test.get()
-    .then(doc => {
-        if (!doc.exists) {
-            console.log('No such document!');
-        } else {
-            console.log('Document data:', doc.data());
-        }
-    })
-    .catch(err => {
-        console.log('Error getting document', err);
-    });
-    return getDoc;
-}
+// function constructDiagnosis(){
+// 	return new Promise((resolve, reject) => {
+// 		var test = db.collection('users').doc('test');
+// 		var output = new Array();
+// 		var getDoc = test.get()
+// 	    .then(doc => {
+// 	        if (!doc.exists) {
+// 	            console.log('No such document!');
+// 	        } else {
+// 	            console.log('Document data:', doc.data());
+// 	            //let doc2 = JSON.stringify(doc.data());
+// 	            let doc1 = doc.data().initial;
+// 	            console.log("doc1: " + doc1);
+// 	            for(var i = 0; i < doc1.length; i++) {
+// 		    	output.push(
+// 		    	{
+// 		    		choice_id : doc1[i]['choice_id'],
+// 		    		id : doc1[i]['id'],
+// 		    		initial : true
+// 		    	});
+
+// 		    	}
+
+// 		    	 console.log("output: " + output);
+
+// 		    	 //console.log("diagnose: " + JSON.stringify(diagnose));
+
+// 		    	 resolve(output);
+// 	        }
+// 	    })
+// 	    .catch(err => {
+// 	        console.log('Error getting document', err);
+// 	    });
+
+// 	    // var output = new Array();
+// 	    // console.log(getDoc);
+//     // let doc = getDoc.initial;
+//     // console.log(doc);
+
+//     // for(var i = 0; i < doc.length; i++) {
+//     // 	output.push(
+//     // 	{
+//     // 		id : doc[i]['id'],
+//     // 		choice_id : doc[i]['choice_id'],
+//     // 		initial : true
+//     // 	});
+//     // }
+// }

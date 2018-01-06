@@ -92,6 +92,7 @@ function processRequest(request, response) {
 			sendResponse(responseToUser);
 		},
 		'diagnosis': () =>{
+			var diagnosis = constructDiagnosis();
 			let message = `Okay, let me ask you a couple of questions.`;
 			let message_2 = `abc`;
 			let responseToUser = {
@@ -162,7 +163,8 @@ function getSyndrome(value) {
 				let syndrome = response.mentions;
 				for (var i = 0; i < syndrome.length; i++) {
 					output.push(
-						{ syndrome : syndrome[i]['name'],
+						{   id : syndrome[i]['id]'],
+							name : syndrome[i]['name'],
 						  choice_id :  syndrome[i]['choice_id']
 						});
 				}
@@ -176,7 +178,7 @@ function getSyndrome(value) {
 			});
 		});
 		req.write(JSON.stringify({
-			text: value
+			text: value	
 		}));
 		req.end();
 	});
@@ -217,7 +219,17 @@ function recordSyndrome(output){
 
 
 function constructDiagnosis(){
-	var data = {
-
-	};
+	var test = db.collection('users').doc('test');
+	var getDoc = test.get()
+    .then(doc => {
+        if (!doc.exists) {
+            console.log('No such document!');
+        } else {
+            console.log('Document data:', doc.data());
+        }
+    })
+    .catch(err => {
+        console.log('Error getting document', err);
+    });
+    return getDoc;
 }

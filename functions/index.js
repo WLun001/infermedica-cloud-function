@@ -241,17 +241,19 @@ function getResult(value) {
 				console.log("question: " + question);
 				resolve(question);
 			});
+
 			res.on('error', (error) => {
 				reject("error" + error);
 			});
+
 		});
+
 		req.write(JSON.stringify({
 			sex : "male", 
 	    	age : 35, 
 	    	evidence : output, 
-	    	extras : {}
-		}
-			));
+	    	extras : {"disable_groups" : true}
+		}));
 
 		req.end();
 	});

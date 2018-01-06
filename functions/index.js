@@ -9,6 +9,7 @@ const appKey = '977d3f7eadfc3a467e624d7b8bef64b3';
 
 admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
+const dbRefInitialSyndrome = db.collection('user1').doc('initial_syndrome');
 
 exports.medicWebhook = functions.https.onRequest((req, res) => {
 	processRequest(req, res)
@@ -92,8 +93,7 @@ function processRequest(request, response) {
 			sendResponse(responseToUser);
 		},
 		'diagnosis': () =>{
-			var test = db.collection('users').doc('test');
-			test.get().then((doc) => { 
+			dbRefInitialSyndrome.get().then((doc) => { 
 			
 			getResult(doc).then((output) => {	
 				// let outputContexts = '';
@@ -290,7 +290,7 @@ function recordSyndrome(output){
 	var data = {
 		initial : output
 		}
-		var setDoc = db.collection('users').doc('test').set(data);
+		var setDoc = dbRefInitialSyndrome.set(data);
 	}
 
 

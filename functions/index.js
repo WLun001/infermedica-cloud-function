@@ -13,9 +13,9 @@ const dbRefInitialSyndrome = db.collection('user1').doc('initial_syndrome');
 const dbRefDiagnosisResult = db.collection('user1').doc('diagnosis_result');
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
-const USER_RESPONSE_YES = 0;
-const USER_RESPONSE_NO = 1;
-const USER_RESPONSE_MAYBE = 2;
+const USER_RESPONSE_YES = yes;
+const USER_RESPONSE_NO = no;
+const USER_RESPONSE_MAYBE = maybe;
 
 exports.medicWebhook = functions.https.onRequest((req, res) => {
 	processRequest(req, res)
@@ -103,7 +103,7 @@ function processRequest(request, response) {
 			
 			getResult(doc, INITIAL_SYNDROME, null).then((output) => {	
 				let message = `Okay, let me ask you a couple of questions.`;
-				let message_2 = output;
+				let message_1 = output;
 				let responseToUser = {
 					messages:[
 						        {
@@ -112,7 +112,7 @@ function processRequest(request, response) {
 						        },
 						        {
 						          "type": 0,
-						          "speech": message_2
+						          "speech": message_1
 	  					        }
 						      ]
 				}
@@ -124,6 +124,24 @@ function processRequest(request, response) {
 			dbRefDiagnosisResult.get().then((doc) => {
 
 				getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_YES).then((output) => {	
+					constructMessage(output);
+				// let message = output;
+				// let responseToUser = {
+				// 	messages:[
+				// 		        {
+				// 		          "type": 0,
+				// 		          "speech": message
+				// 		        }
+				// 		      ]
+				// }
+				// sendResponse(responseToUser);
+					})
+				})
+		},
+		'response.no': () =>{
+			dbRefDiagnosisResult.get().then((doc) => {
+
+				getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_NO).then((output) => {	
 				let message = output;
 				let responseToUser = {
 					messages:[
@@ -133,7 +151,7 @@ function processRequest(request, response) {
 						        }
 						      ]
 				}
-	sendResponse(responseToUser);
+				sendResponse(responseToUser);
 					})
 				})
 		}

@@ -11,6 +11,11 @@ admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
 const dbRefInitialSyndrome = db.collection('user1').doc('initial_syndrome');
 const dbRefDiagnosisResult = db.collection('user1').doc('diagnosis_result');
+const INITIAL_SYNDROME = 0;
+const FOLLOWUP_SYNDROME = 1;
+const USER_RESPONSE_YES = 0;
+const USER_RESPONSE_NO = 1;
+const USER_RESPONSE_MAYBE = 2;
 
 exports.medicWebhook = functions.https.onRequest((req, res) => {
 	processRequest(req, res)
@@ -43,8 +48,8 @@ function processRequest(request, response) {
 			};
 			sendResponse(responseToUser);
 		},
-		'get.syndrome': () => {
-			getSyndrome(syndrome).then((output) => {	
+		'get.initial.syndrome': () => {
+			getInitialSyndrome(syndrome).then((output) => {	
 				recordSyndrome(output);
 				let outputContexts = '';
 				for(var i = 0; i < output.length; i ++){
@@ -96,7 +101,7 @@ function processRequest(request, response) {
 		'diagnosis': () =>{
 			dbRefInitialSyndrome.get().then((doc) => { 
 			
-			getResult(doc).then((output) => {	
+			getResult(doc, INITIAL_SYNDROME, null).then((output) => {	
 				let message = `Okay, let me ask you a couple of questions.`;
 				let message_2 = output;
 				let responseToUser = {
@@ -114,6 +119,23 @@ function processRequest(request, response) {
 				sendResponse(responseToUser);
 				})
 			})
+		},
+		'response.yes': () =>{
+			dbRefDiagnosisResult.get().then((doc) => {
+
+				getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_YES).then((output) => {	
+				let message = output;
+				let responseToUser = {
+					messages:[
+						        {
+						          "type": 0,
+						          "speech": message
+						        }
+						      ]
+				}
+	sendResponse(responseToUser);
+					})
+				})
 		}
 	};
 
@@ -148,7 +170,7 @@ function processRequest(request, response) {
 	}
 }
 
-function getSyndrome(value) {
+function getInitialSyndrome(value) {
 	return new Promise((resolve, reject) => {
 		// Create the path for the HTTP request to get the weather
 
@@ -190,30 +212,22 @@ function getSyndrome(value) {
 	});
 }
 
-function getResult(value) {
+function getResult(value, statusCode, userResponse) {
 	return new Promise((resolve, reject) => {
 		// Create the path for the HTTP request to get the weather
-		var output = new Array();
-		let evidence = value.data().initial;
-	    
-	     console.log("doc1: " + evidence);
-	            for(var i = 0; i < evidence.length; i++) {
-		    	output.push(
-		    	{
-		    		choice_id : evidence[i]['choice_id'],
-		    		id : evidence[i]['id'],
-		    		initial : true
-		    	});
-		    }
 
-		    var data = {
-					sex : "male", 
-			    	age : 35, 
-			    	evidence : output, 
-			    	extras : {"disable_groups" : true}
-				}
+		var evidences = getUserResponse(value, statusCode, userResponse);
+		console.log("evidence: " + JSON.stringify(evidences));
+		
 
-			recordCollectedResult(data);
+	    var data = {
+				sex : "male", 
+		    	age : 35, 
+		    	evidence : evidences, 
+		    	extras : {"disable_groups" : true}
+			}
+
+		recordCollectedResult(data);
 
 		console.log(JSON.stringify(value));
 
@@ -249,6 +263,44 @@ function getResult(value) {
 	});
 }
 
+function getUserResponse(value, statusCode, userResponse) {
+	var output = new Array();
+
+	if(statusCode == INITIAL_SYNDROME) {
+			let initial = value.data().initial;
+		    
+		     
+	        for(var i = 0; i < initial.length; i++) {
+	    	output.push(
+	    	{
+	    		choice_id : initial[i]['choice_id'],
+	    		id : initial[i]['id'],
+	    		initial : true
+	    	});
+	    }
+
+	} else {
+		let evidence = value.data().collected_result.evidence;
+
+		for(var i = 0; i < evidence.length; i++) {
+	    	output.push(
+	    	{
+	    		choice_id : evidence[i]['choice_id'],
+	    		id : evidence[i]['id']
+	    	});
+
+		}
+		let syndromeId = value.data().current_result.question.items[0]['id'];
+		output.push(
+		{
+			choice_id : userResponse,
+			id : syndromeId
+		});
+	}
+
+ 	return output;
+}
+
 function httpRequestBuilder(method, params) {
 	// Create the path for the HTTP request to get the weather
 	var requestMethod = ((reqMethod) => {
@@ -275,6 +327,20 @@ function httpRequestBuilder(method, params) {
 		}
 	};
 }
+
+function constructMessage(output){
+	let message = output;
+	let responseToUser = {
+		messages:[
+			        {
+			          "type": 0,
+			          "speech": message
+			        }
+			      ]
+	}
+	sendResponse(responseToUser);
+}
+
 
 function recordSyndrome(output){
 	var data = {

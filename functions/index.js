@@ -13,9 +13,9 @@ const dbRefInitialSyndrome = db.collection('user1').doc('initial_syndrome');
 const dbRefDiagnosisResult = db.collection('user1').doc('diagnosis_result');
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
-const USER_RESPONSE_YES = yes;
-const USER_RESPONSE_NO = no;
-const USER_RESPONSE_MAYBE = maybe;
+const USER_RESPONSE_YES = "present";
+const USER_RESPONSE_NO = "absent";
+const USER_RESPONSE_MAYBE = "unknown";
 
 exports.medicWebhook = functions.https.onRequest((req, res) => {
 	processRequest(req, res)
@@ -124,17 +124,17 @@ function processRequest(request, response) {
 			dbRefDiagnosisResult.get().then((doc) => {
 
 				getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_YES).then((output) => {	
-					constructMessage(output);
-				// let message = output;
-				// let responseToUser = {
-				// 	messages:[
-				// 		        {
-				// 		          "type": 0,
-				// 		          "speech": message
-				// 		        }
-				// 		      ]
-				// }
-				// sendResponse(responseToUser);
+				
+					let message = output;
+					let responseToUser = {
+						messages:[
+							        {
+							          "type": 0,
+							          "speech": message
+							        }
+							      ]
+					}
+					sendResponse(responseToUser);
 					})
 				})
 		},
@@ -224,7 +224,8 @@ function getInitialSyndrome(value) {
 			});
 		});
 		req.write(JSON.stringify({
-			text: value	
+			text: value,
+			correct_spelling : true
 		}));
 		req.end();
 	});
@@ -261,10 +262,20 @@ function getResult(value, statusCode, userResponse) {
 				// After all the data has been received parse the JSON for desired data
 				let response = JSON.parse(body);
 				console.log("get result body: " + body);
-				console.log("get result response: " + response);
+				console.log("get result response: " + JSON.stringify(response));
 				recordCurrentResult(response);
-				let question = response.question.text;
+
+				let hints = checkDiagnosisCompletion(response);
+				let question = null;
+
+				if(hints != null){
+					question = hints;
+				} else {
+					question = response.question.text;
+				}
+
 				console.log("question: " + question);
+
 
 				resolve(question);
 			});
@@ -301,10 +312,12 @@ function getUserResponse(value, statusCode, userResponse) {
 		let evidence = value.data().collected_result.evidence;
 
 		for(var i = 0; i < evidence.length; i++) {
+			var init = evidence[i]['initial'] ? true : false;
 	    	output.push(
 	    	{
 	    		choice_id : evidence[i]['choice_id'],
-	    		id : evidence[i]['id']
+	    		id : evidence[i]['id'],
+	    		initial : init
 	    	});
 
 		}
@@ -312,11 +325,37 @@ function getUserResponse(value, statusCode, userResponse) {
 		output.push(
 		{
 			choice_id : userResponse,
-			id : syndromeId
+			id : syndromeId,
+			initial : false
 		});
 	}
 
  	return output;
+}
+
+function getCondition (value) {
+  return new Promise((resolve, reject) => {
+    // Create the path for the HTTP request to get the weather
+    value = encodeURI(value);
+    var option = httpRequestBuilder(1, `conditions/${value}`);
+    http.get(option, (res) => {
+      let body = '';
+      res.on('data', (d) => { body += d; });  // store each response chunk
+      console.log("get condition body: " + body);
+      res.on('end', () => { 
+        // After all the data has been received parse the JSON for desired data
+        let response = JSON.parse(body);
+        console.log("get condition response: " + JSON.stringify(response));
+        
+        let hints = response.extras.hint;
+        console.log(hints);
+        resolve(hints);
+      });
+      res.on('error', (error) => {
+        reject(error);
+      });
+    });
+  });
 }
 
 function httpRequestBuilder(method, params) {
@@ -346,19 +385,22 @@ function httpRequestBuilder(method, params) {
 	};
 }
 
-function constructMessage(output){
-	let message = output;
-	let responseToUser = {
-		messages:[
-			        {
-			          "type": 0,
-			          "speech": message
-			        }
-			      ]
-	}
-	sendResponse(responseToUser);
-}
+function checkDiagnosisCompletion(value) {
 
+	if(value.should_stop) {
+		let condId = value.conditions[0]['id'];
+		var hints = getCondition(condId).then((hints) => {	
+			return hints;
+		});
+
+		return hints;
+
+	} else {
+		return null;
+	}
+	
+
+}
 
 function recordSyndrome(output){
 	var data = {

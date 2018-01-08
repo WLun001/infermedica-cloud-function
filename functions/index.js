@@ -347,9 +347,15 @@ function getCondition (value) {
         let response = JSON.parse(body);
         console.log("get condition response: " + JSON.stringify(response));
         
+        let name = response.name;
+        let category = response.categories[0];
+        let prevalence = response.prevalence;
+        let severity = response.severity
         let hints = response.extras.hint;
-        console.log(hints);
-        resolve(hints);
+
+        let message = `Your condition is ${name} which is under ${category} category. This condition is ${prevalence} and ${severity}. ${hints}`;
+
+        resolve(message);
       });
       res.on('error', (error) => {
         reject(error);

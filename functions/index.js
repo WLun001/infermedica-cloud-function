@@ -33,8 +33,12 @@ function processRequest(request, response) {
 			let message = `Hello! Hi! I'm an automatic symptom checker.
 			 				I'll guide you through a simple interview. Do you want to start now?`;
 			let responseToUser = {
-				speech: message, // spoken response
-				text: message // displayed response
+				messages:  [
+					        {
+					          "type": 0,
+					          "speech": message
+					        }
+					      ]
 			};
 			sendResponse(responseToUser);
 
@@ -43,8 +47,12 @@ function processRequest(request, response) {
 			let message = `I'll do my best to explain common health issues, such as headache, fatigue or stomach ache.
 			 What concerns you most about your health? Please describe your symptoms.`;
 			let responseToUser = {
-				speech: message, // spoken response
-				text: message // displayed response
+				messages:  [
+					        {
+					          "type": 0,
+					          "speech": message
+					        }
+					      ]
 			};
 			sendResponse(responseToUser);
 		},
@@ -66,8 +74,12 @@ function processRequest(request, response) {
 				else
 				    message = `Do you mean: ${outputContexts}?`;				
 				let responseToUser = {
-					speech: message, // spoken response
-					text: message // displayed response
+					messages:  [
+					        {
+					          "type": 0,
+					          "speech": message
+					        }
+					      ]
 				};
 				sendResponse(responseToUser);
 			})
@@ -75,8 +87,12 @@ function processRequest(request, response) {
 		'symptom.confirmation.yes': () => {
 			let message = `Alright! What else you want to report?`;
 			let responseToUser = {
-				speech: message, // spoken response
-				text: message // displayed response
+				messages:  [
+					        {
+					          "type": 0,
+					          "speech": message
+					        }
+					      ]
 			};
 			sendResponse(responseToUser);
 		},
@@ -102,15 +118,15 @@ function processRequest(request, response) {
 			dbRefInitialSyndrome.get().then((doc) => { 
 			
 			getResult(doc, INITIAL_SYNDROME, null).then((output) => {	
-				//let message = `Okay, let me ask you a couple of questions.`;
+				let message = `Okay, let me ask you a couple of questions.`;
 				let message_1 = output;
 				let responseToUser = {
 					speech: message_1,
 					messages:[
-						        // {
-						        //   "type": 0,
-						        //   "speech": message
-						        // },
+						        {
+						          "type": 0,
+						          "speech": message
+						        },
 						        {
 						          "type": 0,
 						          "speech": message_1

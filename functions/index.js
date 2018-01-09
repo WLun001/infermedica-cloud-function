@@ -102,14 +102,15 @@ function processRequest(request, response) {
 			dbRefInitialSyndrome.get().then((doc) => { 
 			
 			getResult(doc, INITIAL_SYNDROME, null).then((output) => {	
-				let message = `Okay, let me ask you a couple of questions.`;
+				//let message = `Okay, let me ask you a couple of questions.`;
 				let message_1 = output;
 				let responseToUser = {
+					speech: message_1,
 					messages:[
-						        {
-						          "type": 0,
-						          "speech": message
-						        },
+						        // {
+						        //   "type": 0,
+						        //   "speech": message
+						        // },
 						        {
 						          "type": 0,
 						          "speech": message_1

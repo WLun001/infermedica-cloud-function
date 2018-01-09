@@ -99,8 +99,6 @@ function processRequest(request, response) {
 		'symptom.confirmation.no': () => {
 			let message = `I will skip that. Please describe it again.`;
 			let responseToUser = {
-				speech: message, // spoken response
-				text: message, // displayed response
 				messages:  [
 					        {
 					          "type": 0,
@@ -119,19 +117,9 @@ function processRequest(request, response) {
 			
 			getResult(doc, INITIAL_SYNDROME, null).then((output) => {	
 				let message = `Okay, let me ask you a couple of questions.`;
-				let message_1 = output;
+				output.splice(0, 0, {"type" : 0, "speech" : message});
 				let responseToUser = {
-					speech: message_1,
-					messages:[
-						        {
-						          "type": 0,
-						          "speech": message
-						        },
-						        {
-						          "type": 0,
-						          "speech": message_1
-	  					        }
-						      ]
+					messages : output
 				}
 				sendResponse(responseToUser);
 				})
@@ -142,14 +130,8 @@ function processRequest(request, response) {
 
 				getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_YES).then((output) => {	
 				
-					let message = output;
 					let responseToUser = {
-						messages:[
-							        {
-							          "type": 0,
-							          "speech": message
-							        }
-							      ]
+						messages: output
 					}
 					sendResponse(responseToUser);
 					})
@@ -159,14 +141,8 @@ function processRequest(request, response) {
 			dbRefDiagnosisResult.get().then((doc) => {
 
 				getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_NO).then((output) => {	
-				let message = output;
 				let responseToUser = {
-					messages:[
-						        {
-						          "type": 0,
-						          "speech": message
-						        }
-						      ]
+					messages: output
 				}
 				sendResponse(responseToUser);
 					})
@@ -283,18 +259,37 @@ function getResult(value, statusCode, userResponse) {
 				recordCurrentResult(response);
 
 				let hints = checkDiagnosisCompletion(response);
-				let question = null;
+				var answer = new Array();
 
 				if(hints != null){
-					question = hints;
+					answer = hints;
 				} else {
-					question = response.question.text;
+					let probability = response.conditions[0]['probability'];
+					let condition = response.conditions[0]['common_name'];
+					var messages = "";
+
+					if(probability != null) {
+						messages = `Please bear with me, the diagnosis will carry on. Your current condition is having ${(probability*100).toFixed(2)}% of ${condition}.`;
+						answer.push(
+						{
+							type : 0,
+							speech : messages
+
+						});
+
+					}
+
+					let question = response.question.text;
+
+					answer.push(
+					{
+						type : 0,
+						speech : question
+					}
+					); 
 				}
 
-				console.log("question: " + question);
-
-
-				resolve(question);
+				resolve(answer);
 			});
 
 			res.on('error', (error) => {
@@ -370,7 +365,21 @@ function getCondition (value) {
         let severity = response.severity
         let hints = response.extras.hint;
 
-        let message = `Your condition is ${name} which is under ${category} category. This condition is ${prevalence} and ${severity}. ${hints}`;
+        let message = [
+        	{
+        		type : 0,
+        		speech : `Your condition is ${name} which is under ${category} category.`
+        	}, 
+        	{
+        		type : 0,
+        		speech : `This condition is ${prevalence} and ${severity}.`
+        	},
+        	{
+        		type : 0,
+        		speech :  `${hints}`
+        	}
+
+        ];
 
         resolve(message);
       });

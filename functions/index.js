@@ -9,8 +9,9 @@ const appKey = '977d3f7eadfc3a467e624d7b8bef64b3';
 
 admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
-const dbRefInitialSyndrome = db.collection('user1').doc('initial_syndrome');
-const dbRefDiagnosisResult = db.collection('user1').doc('diagnosis_result');
+const dbRefInitialSyndrome = db.collection('patients').doc('patient1').collection('diagnosis_data').doc('initial_syndrome');
+const dbRefDiagnosisResult = db.collection('patients').doc('patient1').collection('diagnosis_data').doc('diagnosis_result');
+const dbRefDiagnosisHistory = db.collection('patients').doc('patient1').collection('diagnosis_data').doc('diagnosis_history');
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
 const USER_RESPONSE_YES = "present";
@@ -358,6 +359,8 @@ function getCondition (value) {
         // After all the data has been received parse the JSON for desired data
         let response = JSON.parse(body);
         console.log("get condition response: " + JSON.stringify(response));
+
+        recordDiagnosisHistory(response)
         
         let name = response.name;
         let category = response.categories[0];
@@ -437,9 +440,20 @@ function checkDiagnosisCompletion(value) {
 function recordSyndrome(output){
 	var data = {
 		initial : output
-		}
-		var setDoc = dbRefInitialSyndrome.set(data);
 	}
+	
+	var setDoc = dbRefInitialSyndrome.set(data);
+}
+
+function recordDiagnosisHistory(output){
+	var data = {
+		history : output
+	}
+
+	var setDoc = dbRefDiagnosisHistory.set(data);
+}
+
+
 
 function recordCurrentResult(output){
 	var data = {

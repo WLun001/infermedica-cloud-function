@@ -9,9 +9,10 @@ const appKey = '977d3f7eadfc3a467e624d7b8bef64b3';
 
 admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
-const dbRefInitialSyndrome = db.collection('patients').doc('patient1').collection('diagnosis_data').doc('initial_syndrome');
-const dbRefDiagnosisResult = db.collection('patients').doc('patient1').collection('diagnosis_data').doc('diagnosis_result');
-const dbRefDiagnosisHistory = db.collection('patients').doc('patient1').collection('diagnosis_data').doc('diagnosis_history');
+
+var dbRefInitialSyndrome = null;
+var dbRefDiagnosisResult = null;
+var dbRefDiagnosisHistory = null;
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
 const USER_RESPONSE_YES = "present";
@@ -24,6 +25,12 @@ exports.medicWebhook = functions.https.onRequest((req, res) => {
 });
 
 function processRequest(request, response) {
+ var userId = request.body.sessionId
+ dbRefInitialSyndrome = db.collection('patients').doc(userId).collection('diagnosis_data').doc('initial_syndrome');
+ dbRefDiagnosisResult = db.collection('patients').doc(userId).collection('diagnosis_data').doc('diagnosis_result');
+ dbRefDiagnosisHistory = db.collection('patients').doc(userId).collection('diagnosis_data').doc('diagnosis_history');
+	console.log("user id: " + userId)
+	
 	let action = request.body.result.action;
 	let syndrome = request.body.result.parameters['syndrome'];
 	console.log('action : ' + action);
@@ -453,19 +460,30 @@ function recordDiagnosisHistory(output){
 	var setDoc = dbRefDiagnosisHistory.set(data);
 }
 
-
-
 function recordCurrentResult(output){
 	var data = {
 		current_result : output
 	}
-	var setDoc = dbRefDiagnosisResult.update(data);
+  dbRefDiagnosisResult.get()
+  .then((docSnapshot) => {
+    if (docSnapshot.exists) {
+      dbRefDiagnosisResult.update(data)
+    } else {
+       dbRefDiagnosisResult.set(data);
+    }
+});
 }
 
 function recordCollectedResult(output){
 	var data = {
 		collected_result : output
 	}
-	var setDoc = dbRefDiagnosisResult.update(data);
+	dbRefDiagnosisResult.get()
+  .then((docSnapshot) => {
+    if (docSnapshot.exists) {
+      	 dbRefDiagnosisResult.update(data);
+    } else {
+       dbRefDiagnosisResult.set(data);
+    }
+});
 }
-

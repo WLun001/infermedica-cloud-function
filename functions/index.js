@@ -32,7 +32,6 @@ function processRequest(request, response) {
  dbRefDiagnosisResult = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_result');
  dbRefDiagnosisHistory = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_history');
 
- //dbRefReportLog = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_log');
  dbRefReportQuestion = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_question');
 	console.log("user id: " + userId)
 	
@@ -495,24 +494,6 @@ function recordCollectedResult(output){
     }
 });
 }
-
-// function recordReportLog(output){
-// 	let conditions = output.conditions;
-
-//     var data = {
-//     	timestamp: admin.firestore.FieldValue.serverTimestamp(),
-//     	conditions: conditions
-//     }
-
-//     dbRefReportLog.get()
-//   .then((docSnapshot) => {
-//     if (docSnapshot.exists) {
-//       	 dbRefReportLog.update(data);
-//     } else {
-//        dbRefReportLog.set(data);
-//     }
-// 	});
-// }
 
 function recordReportQuestion(output, userResponse){
 

@@ -13,6 +13,7 @@ var db = admin.firestore();
 var dbRefInitialSyndrome = null;
 var dbRefDiagnosisResult = null;
 var dbRefDiagnosisHistory = null;
+var dbRefReportLog = null;
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
 const USER_RESPONSE_YES = "present";
@@ -26,9 +27,11 @@ exports.medicWebhook = functions.https.onRequest((req, res) => {
 
 function processRequest(request, response) {
  var userId = request.body.sessionId
- dbRefInitialSyndrome = db.collection('patients').doc(userId).collection('diagnosis_data').doc('initial_syndrome');
- dbRefDiagnosisResult = db.collection('patients').doc(userId).collection('diagnosis_data').doc('diagnosis_result');
- dbRefDiagnosisHistory = db.collection('patients').doc(userId).collection('diagnosis_data').doc('diagnosis_history');
+ dbRefInitialSyndrome = db.collection('users').doc(userId).collection('diagnosis_data').doc('initial_syndrome');
+ dbRefDiagnosisResult = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_result');
+ dbRefDiagnosisHistory = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_history');
+
+ dbRefReportLog = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_log');
 	console.log("user id: " + userId)
 	
 	let action = request.body.result.action;
@@ -265,6 +268,7 @@ function getResult(value, statusCode, userResponse) {
 				console.log("get result body: " + body);
 				console.log("get result response: " + JSON.stringify(response));
 				recordCurrentResult(response);
+				recordReportLog(response);
 
 				let hints = checkDiagnosisCompletion(response);
 				var answer = new Array();
@@ -484,6 +488,30 @@ function recordCollectedResult(output){
       	 dbRefDiagnosisResult.update(data);
     } else {
        dbRefDiagnosisResult.set(data);
+    }
+});
+}
+
+function recordReportLog(output){
+	let ques = output.question.text;
+	let id = output.question.items[0]['id'];
+	let name = output.question.items[0]['name'];
+	let conditions = output.conditions;
+
+    var data = {
+    	timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    	symptom_id: id,
+    	symptom: name,
+    	conditions: conditions,
+    	question: ques
+    }
+
+    dbRefReportLog.get()
+  .then((docSnapshot) => {
+    if (docSnapshot.exists) {
+      	 dbRefReportLog.update(data);
+    } else {
+       dbRefReportLog.set(data);
     }
 });
 }

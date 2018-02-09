@@ -14,6 +14,7 @@ var dbRefInitialSyndrome = null;
 var dbRefDiagnosisResult = null;
 var dbRefDiagnosisHistory = null;
 var dbRefReportLog = null;
+var dbRefReportQuestion = null;
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
 const USER_RESPONSE_YES = "present";
@@ -31,7 +32,8 @@ function processRequest(request, response) {
  dbRefDiagnosisResult = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_result');
  dbRefDiagnosisHistory = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_history');
 
- dbRefReportLog = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_log');
+ //dbRefReportLog = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_log');
+ dbRefReportQuestion = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_question');
 	console.log("user id: " + userId)
 	
 	let action = request.body.result.action;
@@ -268,7 +270,7 @@ function getResult(value, statusCode, userResponse) {
 				console.log("get result body: " + body);
 				console.log("get result response: " + JSON.stringify(response));
 				recordCurrentResult(response);
-				recordReportLog(response);
+				//recordReportLog(response);
 
 				let hints = checkDiagnosisCompletion(response);
 				var answer = new Array();
@@ -352,6 +354,8 @@ function getUserResponse(value, statusCode, userResponse) {
 			id : syndromeId,
 			initial : false
 		});
+
+		recordReportQuestion(value, userResponse);
 	}
 
  	return output;
@@ -492,26 +496,53 @@ function recordCollectedResult(output){
 });
 }
 
-function recordReportLog(output){
-	let ques = output.question.text;
-	let id = output.question.items[0]['id'];
-	let name = output.question.items[0]['name'];
-	let conditions = output.conditions;
+// function recordReportLog(output){
+// 	let conditions = output.conditions;
 
-    var data = {
-    	timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    	symptom_id: id,
+//     var data = {
+//     	timestamp: admin.firestore.FieldValue.serverTimestamp(),
+//     	conditions: conditions
+//     }
+
+//     dbRefReportLog.get()
+//   .then((docSnapshot) => {
+//     if (docSnapshot.exists) {
+//       	 dbRefReportLog.update(data);
+//     } else {
+//        dbRefReportLog.set(data);
+//     }
+// 	});
+// }
+
+function recordReportQuestion(output, userResponse){
+
+	let question = new Array();
+	if (output.data().question) {
+		question = output.data().question;
+	}
+	let ques = output.data().current_result.question.text;
+	let id = output.data().current_result.question.items[0]['id'];
+	let name = output.data().current_result.question.items[0]['name'];
+
+	var newQues = {
+		symptom_id: id,
     	symptom: name,
-    	conditions: conditions,
-    	question: ques
-    }
+    	question: ques,
+    	user_response : userResponse
+	}
+	question.push(newQues);
 
-    dbRefReportLog.get()
+	var data = {
+		question: question
+	}
+
+	dbRefDiagnosisResult.get()
   .then((docSnapshot) => {
     if (docSnapshot.exists) {
-      	 dbRefReportLog.update(data);
+      	 dbRefDiagnosisResult.update(data);
     } else {
-       dbRefReportLog.set(data);
+       dbRefDiagnosisResult.set(data);
     }
-});
+	});
+
 }

@@ -15,6 +15,7 @@ var dbRefDiagnosisResult = null;
 var dbRefDiagnosisHistory = null;
 var dbRefReportLog = null;
 var dbRefReportQuestion = null;
+var dbRefMedicReport = null;
 const INITIAL_SYNDROME = 0;
 const FOLLOWUP_SYNDROME = 1;
 const USER_RESPONSE_YES = "present";
@@ -33,6 +34,8 @@ function processRequest(request, response) {
  dbRefDiagnosisHistory = db.collection('users').doc(userId).collection('diagnosis_data').doc('diagnosis_history');
 
  dbRefReportQuestion = db.collection('users').doc(userId).collection('diagnosis_data').doc('report_question');
+
+ dbRefMedicReport = db.collection('users').doc(userId).collection('medic_report');
 	console.log("user id: " + userId)
 	
 	let action = request.body.result.action;
@@ -374,7 +377,8 @@ function getCondition (value) {
         let response = JSON.parse(body);
         console.log("get condition response: " + JSON.stringify(response));
 
-        recordDiagnosisHistory(response)
+        recordDiagnosisHistory(response);
+        generateReport(response);
         
         let name = response.name;
         let category = response.categories[0];
@@ -526,4 +530,31 @@ function recordReportQuestion(output, userResponse){
     }
 	});
 
+}
+
+function generateReport(condition){
+	var initialSyndrome;
+	var currentResult;
+	var question;
+	console.log("Generating report");
+
+	dbRefInitialSyndrome.get()
+	.then((doc) => {
+		initialSyndrome = doc.data();
+		console.log("Getting initial_syndrome");
+
+		dbRefDiagnosisResult.get()
+		.then((doc) => {
+			currentResult = doc.data().current_result;
+			question = doc.data().question;
+			console.log("Getting current_result");
+
+			var data = {
+				initial: initialSyndrome,
+				possible_conditions: currentResult,
+				diagnose_condition: condition
+			}
+			dbRefMedicReport.add(data);
+		})
+	})
 }

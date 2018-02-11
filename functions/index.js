@@ -553,6 +553,7 @@ function generateReport(condition){
 				initial: initialSyndrome,
 				possible_conditions: currentResult,
 				diagnose_condition: condition,
+				questions: question,
 				timestamp: admin.firestore.FieldValue.serverTimestamp()
 			}
 			dbRefMedicReport.add(data);

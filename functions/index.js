@@ -245,7 +245,6 @@ function getInitialSyndrome(value) {
 * @param {string} userResponse - response from user, either is USER_RESPONSE_YES, const USER_RESPONSE_NO or USER_RESPONSE_MAYBE
 * @returnn {Promise} array of questions from infermedica api
 */
-
 function getResult(value, statusCode, userResponse) {
     return new Promise((resolve, reject) => {
 
@@ -371,7 +370,6 @@ function getUserResponse(value, statusCode, userResponse) {
 * @param {string} value - condition_id
 * @return {Promise} array of messages 
 */
-
 function getCondition(value) {
     return new Promise((resolve, reject) => {
         value = encodeURI(value);
@@ -426,7 +424,6 @@ function getCondition(value) {
 * @param {string} params - params to added the reqeust url
 * @return {json} http header
 */
-
 function httpRequestBuilder(method, params) {
     var requestMethod = ((reqMethod) => {
         switch (reqMethod) {
@@ -458,7 +455,6 @@ function httpRequestBuilder(method, params) {
 * @param {json} value - the json to be check
 * @return {string} hints of the condition if there diagnose should stop
 */
-
 function checkDiagnosisCompletion(value) {
     if (value.should_stop) {
         let condId = value.conditions[0]['id'];
@@ -471,8 +467,6 @@ function checkDiagnosisCompletion(value) {
     } else {
         return null;
     }
-
-
 }
 
 /**

@@ -156,6 +156,17 @@ function processRequest(request, response) {
                     sendResponse(responseToUser);
                 })
             })
+        },
+        'response.maybe': () => {
+            dbRefDiagnosisResult.get().then((doc) => {
+
+                getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_MAYBE).then((output) => {
+                    let responseToUser = {
+                        messages: output
+                    }
+                    sendResponse(responseToUser);
+                })
+            })
         }
     };
 

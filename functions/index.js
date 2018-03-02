@@ -70,6 +70,8 @@ function processRequest(request, response) {
         'get.initial.syndrome': () => {
             getInitialSyndrome(syndrome).then((output) => {
                 recordSyndrome(output);
+                //clear previous record in db
+                dbRefDiagnosisResult.delete();
                 let outputContexts = '';
                 for (var i = 0; i < output.length; i++) {
                     console.log("choice id = " + output[0].choice_id);
@@ -158,8 +160,8 @@ function processRequest(request, response) {
             })
         },
         'response.maybe': () => {
-            dbRefDiagnosisResult.get().then((doc) => {
-
+            dbRefDiagnosisResult.get().then((doc) => {  
+    
                 getResult(doc, FOLLOWUP_SYNDROME, USER_RESPONSE_MAYBE).then((output) => {
                     let responseToUser = {
                         messages: output

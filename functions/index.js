@@ -4,8 +4,8 @@ const admin = require('firebase-admin');
 
 const http = require('https');
 const host = 'api.infermedica.com';
-const appId = '23c309ab';
-const appKey = '977d3f7eadfc3a467e624d7b8bef64b3';
+const appId = YOURID;
+const appKey = YOURKEY;
 
 admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();

@@ -1,5 +1,11 @@
 # infermedica-cloud-function
 
+## Related Repositories
+- [Pocket Health Advisor](https://github.com/WLun001/pocket-health-advisor)
+- [Web View Hospital](https://github.com/wanching0730/angular-hospital-2)
+- [Web View Doctor](https://github.com/wanching0730/Doctor-View-Angular)
+- [Braintree Server](https://github.com/WLun001/braintree-server)
+
 ## Setup Instructions
 
 ### Steps
